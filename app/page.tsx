@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { motion } from 'motion/react'
 import { XIcon } from 'lucide-react'
 import { Spotlight } from '@/components/ui/spotlight'
@@ -12,6 +13,9 @@ import {
 } from '@/components/ui/morphing-dialog'
 import Link from 'next/link'
 import { AnimatedBackground } from '@/components/ui/animated-background'
+import { InfiniteSlider } from '@/components/ui/infinite-slider'
+import TechStackIcon from 'tech-stack-icons'
+import { WorkDetailModal } from '@/components/ui/work-detail-modal'
 import {
   PROJECTS,
   WORK_EXPERIENCE,
@@ -39,11 +43,12 @@ const TRANSITION_SECTION = {
   duration: 0.3,
 }
 
-type ProjectVideoProps = {
+type ProjectImageProps = {
   src: string
+  alt: string
 }
 
-function ProjectVideo({ src }: ProjectVideoProps) {
+function ProjectImage({ src, alt }: ProjectImageProps) {
   return (
     <MorphingDialog
       transition={{
@@ -53,22 +58,18 @@ function ProjectVideo({ src }: ProjectVideoProps) {
       }}
     >
       <MorphingDialogTrigger>
-        <video
+        <img
           src={src}
-          autoPlay
-          loop
-          muted
-          className="aspect-video w-full cursor-zoom-in rounded-xl"
+          alt={alt}
+          className="aspect-video w-full cursor-zoom-in rounded-xl object-cover"
         />
       </MorphingDialogTrigger>
       <MorphingDialogContainer>
         <MorphingDialogContent className="relative aspect-video rounded-2xl bg-zinc-50 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950 dark:ring-zinc-800/50">
-          <video
+          <img
             src={src}
-            autoPlay
-            loop
-            muted
-            className="aspect-video h-[50vh] w-full rounded-xl md:h-[70vh]"
+            alt={alt}
+            className="aspect-video h-[50vh] w-full rounded-xl object-cover md:h-[70vh]"
           />
         </MorphingDialogContent>
         <MorphingDialogClose
@@ -100,6 +101,8 @@ function MagneticSocialLink({
     <Magnetic springOptions={{ bounce: 0 }} intensity={0.3}>
       <a
         href={link}
+        target="_blank"
+        rel="noopener noreferrer"
         className="group relative inline-flex shrink-0 items-center gap-[1px] rounded-full bg-zinc-100 px-2.5 py-1 text-sm text-black transition-colors duration-200 hover:bg-zinc-950 hover:text-zinc-50 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
       >
         {children}
@@ -124,6 +127,8 @@ function MagneticSocialLink({
 }
 
 export default function Personal() {
+  const [selectedJob, setSelectedJob] = useState<typeof WORK_EXPERIENCE[0] | null>(null)
+
   return (
     <motion.main
       className="space-y-24"
@@ -137,8 +142,7 @@ export default function Personal() {
       >
         <div className="flex-1">
           <p className="text-zinc-600 dark:text-zinc-400">
-            Focused on creating intuitive and performant web experiences.
-            Bridging the gap between design and development.
+          Engineering software that unlocks the power of data. Focused on performance, reliability, and impact. Also fascinated by financial markets.
           </p>
         </div>
       </motion.section>
@@ -152,7 +156,7 @@ export default function Personal() {
           {PROJECTS.map((project) => (
             <div key={project.name} className="space-y-2">
               <div className="relative rounded-2xl bg-zinc-50/40 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950/40 dark:ring-zinc-800/50">
-                <ProjectVideo src={project.video} />
+                <ProjectImage src={project.image} alt={project.name} />
               </div>
               <div className="px-1">
                 <a
@@ -179,12 +183,10 @@ export default function Personal() {
         <h3 className="mb-5 text-lg font-medium">Work Experience</h3>
         <div className="flex flex-col space-y-2">
           {WORK_EXPERIENCE.map((job) => (
-            <a
-              className="relative overflow-hidden rounded-2xl bg-zinc-300/30 p-[1px] dark:bg-zinc-600/30"
-              href={job.link}
-              target="_blank"
-              rel="noopener noreferrer"
+            <div
+              className="relative cursor-pointer overflow-hidden rounded-2xl bg-zinc-300/30 p-[1px] dark:bg-zinc-600/30 transition-transform hover:scale-[1.02]"
               key={job.id}
+              onClick={() => setSelectedJob(job)}
             >
               <Spotlight
                 className="from-zinc-900 via-zinc-800 to-zinc-700 blur-2xl dark:from-zinc-100 dark:via-zinc-200 dark:to-zinc-50"
@@ -205,7 +207,7 @@ export default function Personal() {
                   </p>
                 </div>
               </div>
-            </a>
+            </div>
           ))}
         </div>
       </motion.section>
@@ -214,7 +216,21 @@ export default function Personal() {
         variants={VARIANTS_SECTION}
         transition={TRANSITION_SECTION}
       >
-        <h3 className="mb-3 text-lg font-medium">Blog</h3>
+        <h3 className="mb-5 text-lg font-medium">Tech Stack</h3>
+        <InfiniteSlider speedOnHover={20} gap={32}>
+          {['react', 'nextjs2', 'typescript', 'python', 'nodejs', 'tailwindcss', 'postgresql', 'git', 'html5', 'css3', 'js', 'mysql'].map((tech) => (
+            <div key={tech} className="flex items-center justify-center w-[48px] h-[48px]">
+              <TechStackIcon name={tech} className="w-10 h-10" />
+            </div>
+          ))}
+        </InfiniteSlider>
+      </motion.section>
+
+      <motion.section
+        variants={VARIANTS_SECTION}
+        transition={TRANSITION_SECTION}
+      >
+        <h3 className="mb-3 text-lg font-medium">Archives</h3>
         <div className="flex flex-col space-y-0">
           <AnimatedBackground
             enableHover
@@ -265,6 +281,17 @@ export default function Personal() {
           ))}
         </div>
       </motion.section>
+
+      {/* Work Experience Modal */}
+      <WorkDetailModal
+        isOpen={selectedJob !== null}
+        onClose={() => setSelectedJob(null)}
+        title={selectedJob?.title ?? ''}
+        company={selectedJob?.company ?? ''}
+        start={selectedJob?.start ?? ''}
+        end={selectedJob?.end ?? ''}
+        description={selectedJob?.description ?? ''}
+      />
     </motion.main>
   )
 }

@@ -2,7 +2,7 @@ type Project = {
   name: string
   description: string
   link: string
-  video: string
+  image: string
   id: string
 }
 
@@ -11,8 +11,8 @@ type WorkExperience = {
   title: string
   start: string
   end: string
-  link: string
   id: string
+  description: string
 }
 
 type BlogPost = {
@@ -29,97 +29,86 @@ type SocialLink = {
 
 export const PROJECTS: Project[] = [
   {
-    name: 'Motion Primitives Pro',
+    name: 'Loan Eligibility Checker',
     description:
-      'Advanced components and templates to craft beautiful websites.',
-    link: 'https://pro.motion-primitives.com/',
-    video:
-      'https://res.cloudinary.com/read-cv/video/upload/t_v_b/v1/1/profileItems/W2azTw5BVbMXfj7F53G92hMVIn32/newProfileItem/d898be8a-7037-4c71-af0c-8997239b050d.mp4?_a=DATAdtAAZAA0',
+      'A comprehensive machine learning system for assessing loan eligibility of Malaysian Small and Medium Enterprises (SMEs) in the Food and Beverages sector.',
+    link: 'https://github.com/mzaidaqil/loan-eligibility-ml-new',
+    image: '/projects/projects1.webp',
     id: 'project1',
   },
   {
-    name: 'Motion Primitives',
-    description: 'UI kit to make beautiful, animated interfaces.',
-    link: 'https://motion-primitives.com/',
-    video:
-      'https://res.cloudinary.com/read-cv/video/upload/t_v_b/v1/1/profileItems/W2azTw5BVbMXfj7F53G92hMVIn32/XSfIvT7BUWbPRXhrbLed/ee6871c9-8400-49d2-8be9-e32675eabf7e.mp4?_a=DATAdtAAZAA0',
+    name: 'Runtrackr',
+    description: 'RunTrackr is a web-based event management system specifically designed for the Kuala Lumpur RunFest 2025.',
+    link: 'https://github.com/mzaidaqil/runtrackr-web',
+    image: '/projects/projects2.webp',
     id: 'project2',
+  },
+  {
+    name: 'Urban Heat Island (UHI) Index Prediction',
+    description: 'The project aims to predict the Urban Heat Island (UHI) Index for various locations in New York City using satellite imagery data and machine learning techniques.',
+    link: 'https://github.com/mzaidaqil/EY-Open-Data-Science-Challenge-2025',
+    image: '/projects/projects3.webp',
+    id: 'project3',
   },
 ]
 
 export const WORK_EXPERIENCE: WorkExperience[] = [
   {
-    company: 'Reglazed Studio',
-    title: 'CEO',
+    company: 'Trez Sport',
+    title: 'Web Developer & Social Media Admin',
     start: '2024',
-    end: 'Present',
-    link: 'https://ibelick.com',
+    end: '2025',
     id: 'work1',
+    description: `•	Collaborated with cross-functional teams to design, develop, and maintain an engaging and user-friendly e-commerce website using Elementor software, and implementing WooCommerce to manage backend services of the ecommerce store resulting best customer experience on websites.
+
+•	Implementing WooCommerce to manage the backend operations of the ecommerce store, including order processing, inventory management, and sakes tracking, optimizing efficiency and accuracy. 
+
+•	Design, edit & publish contents on Tiktok with focused on sports branding using Capcut, Adobe Illustrators & Photoshop
+`
   },
   {
-    company: 'Freelance',
-    title: 'Design Engineer',
-    start: '2022',
+    company: 'TYPO Cotton On',
+    title: 'Retail Assistant',
+    start: '2023',
     end: '2024',
-    link: 'https://ibelick.com',
     id: 'work2',
+    description: `•	Processed over 100+ daily transactions while maintaining exceptional customer service and achieving daily sales targets through personalized product recommendations.
+
+•	Managed inventory operations including restocking merchandise, organizing stockroom, and conducting weekly stock counts to ensure optimal product availability
+
+`
   },
   {
-    company: 'Freelance',
-    title: 'Front-end Developer',
-    start: '2017',
-    end: 'Present',
-    link: 'https://ibelick.com',
+    company: 'Putrajaya Corporation',
+    title: 'Civil Engineering Intern',
+    start: '2023',
+    end: '',
     id: 'work3',
+    description: `•	Collaborated with Eagle Engineering & Trading SDN. BHD. To collect borehole data and conduct soil exploration at Taman Ekuestrian Presint 8, Putrajaya. Successfully completed 70% of the soil exploration from sampling to laboratory testing.
+
+•	Analyzed data obtain from soil exploration and conducted laboratory tests and compared the current soil conditions with 2013 data, offering insights for informed decision-making based on consultation from department engineers.
+`
   },
 ]
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    title: 'Exploring the Intersection of Design, AI, and Design Engineering',
-    description: 'How AI is changing the way we design',
+    title: 'Not Ready Yet',
+    description: 'not-ready-yet',
     link: '/blog/exploring-the-intersection-of-design-ai-and-design-engineering',
     uid: 'blog-1',
-  },
-  {
-    title: 'Why I left my job to start my own company',
-    description:
-      'A deep dive into my decision to leave my job and start my own company',
-    link: '/blog/exploring-the-intersection-of-design-ai-and-design-engineering',
-    uid: 'blog-2',
-  },
-  {
-    title: 'What I learned from my first year of freelancing',
-    description:
-      'A look back at my first year of freelancing and what I learned',
-    link: '/blog/exploring-the-intersection-of-design-ai-and-design-engineering',
-    uid: 'blog-3',
-  },
-  {
-    title: 'How to Export Metadata from MDX for Next.js SEO',
-    description: 'A guide on exporting metadata from MDX files to leverage Next.js SEO features.',
-    link: '/blog/example-mdx-metadata',
-    uid: 'blog-4',
-  },
+  }
 ]
 
 export const SOCIAL_LINKS: SocialLink[] = [
   {
     label: 'Github',
-    link: 'https://github.com/ibelick',
-  },
-  {
-    label: 'Twitter',
-    link: 'https://twitter.com/ibelick',
+    link: 'https://github.com/mzaidaqil',
   },
   {
     label: 'LinkedIn',
-    link: 'https://www.linkedin.com/in/ibelick',
-  },
-  {
-    label: 'Instagram',
-    link: 'https://www.instagram.com/ibelick',
+    link: 'https://www.linkedin.com/in/zaid-aqil-7a126b181/',
   },
 ]
 
-export const EMAIL = 'your@email.com'
+export const EMAIL = 'zaidaqil.work@gmail.com'
