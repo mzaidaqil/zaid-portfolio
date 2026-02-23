@@ -93,8 +93,8 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    title: 'Not Ready Yet',
-    description: 'not-ready-yet',
+    title: 'WIP',
+    description: 'WIP',
     link: '/blog/exploring-the-intersection-of-design-ai-and-design-engineering',
     uid: 'blog-1',
   }
