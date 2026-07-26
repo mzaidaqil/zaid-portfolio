@@ -1,0 +1,138 @@
+export const metadata = {
+  title: 'What I Learned Teaching Myself dbt (as a Data Engineering Intern)',
+  description:
+    'Notes from building my first real dbt + BigQuery project during my internship at Deloitte SEA Consulting — the concepts, the project structure, and every bug that taught me something.',
+  alternates: {
+    canonical: '/blog/learning-dbt-bigquery-as-an-intern',
+  },
+};
+
+# What I Learned Teaching Myself dbt (as a Data Engineering Intern)
+
+A few weeks into my internship at **Deloitte SEA Consulting**, I kept hearing one word in almost every data conversation: **dbt**. So instead of just nodding along, I decided to actually build something with it. This post is a beginner-friendly recap of what I learned — written for anyone who, like me a month ago, has heard of dbt but has no idea what it actually does.
+
+I built a small project against a real BigQuery sandbox, using the classic `jaffle_shop` sample dataset (customers, orders, and payments for a fictional restaurant chain). No prior dbt experience going in — just SQL and a lot of trial and error.
+
+---
+
+## So what is dbt, actually?
+
+dbt (short for **data build tool**) doesn't move data *into* your warehouse — it just helps you transform data that's already there, using plain SQL. You write a `SELECT` statement, and dbt handles turning it into a table or view, figuring out the right build order, and testing your data for you.
+
+Coming from a more traditional SQL/Oracle background, here's how the core pieces mapped for me:
+
+| dbt concept | What it actually is | Closest analogue I knew |
+|---|---|---|
+| **Model** | A `.sql` file with one `SELECT` statement. dbt turns it into a table or view automatically. | A SQL script, minus writing your own `CREATE TABLE` |
+| **`ref()`** | Points to another dbt model, so dbt knows the build order. | Manually sequencing which script runs first |
+| **`source()`** | Points to a raw table dbt didn't create itself. | A hardcoded table name, but declared in one place |
+| **Seed** | A CSV file that gets loaded straight into the warehouse. | `SQL*Loader` for small reference data |
+| **Materialization** | Whether a model becomes a `view` (built fresh each query) or a `table` (physically stored). | View vs. materialized view |
+| **Test** | A simple YAML rule (e.g. "this column must be unique") that dbt checks for you. | A constraint your database won't enforce on its own |
+| **Docs** | An auto-generated site showing how all your models connect. | A hand-drawn ER diagram, except it's always up to date |
+
+The big mental shift: you stop thinking about *how* to move data step by step, and start just describing *what* the final table should look like. dbt figures out the rest.
+
+---
+
+## Two config files, two very different jobs
+
+dbt splits configuration into two files, and understanding *why* saved me a lot of confusion:
+
+- **`profiles.yml`** lives on your own machine, outside the project folder. It holds your credentials and warehouse connection details. It's never committed to git, because it's personal to whoever's running the project.
+- **`dbt_project.yml`** lives inside the project and *is* committed to git. It describes the project itself — its name, folder layout, and default settings. It just references which connection in `profiles.yml` to use.
+
+In short: one file says "how do I connect," the other says "what is this project."
+
+---
+
+## The project, laid out simply
+
+```
+learn_dbt/
+├── dbt_project.yml
+├── seeds/                     # raw CSVs, loaded as-is
+│   ├── raw_customers.csv
+│   ├── raw_orders.csv
+│   └── raw_payments.csv
+└── models/
+    ├── staging/                # light cleanup, one file per raw table
+    │   ├── stg_customers.sql
+    │   ├── stg_orders.sql
+    │   └── stg_payments.sql
+    └── marts/                  # the "final answer" tables
+        ├── customers.sql       # joins everything into one customer profile
+        └── customers.yml       # tests: is customer_id always unique?
+```
+
+A pattern that clicked for me: **staging models are cheap views, mart models are tables.** The staging layer just tidies up raw data, so there's no benefit to storing it physically — a view recomputes it on demand. The `customers` mart, on the other hand, joins and aggregates three tables together, so it's worth paying the storage cost once instead of recomputing that join every time someone queries it.
+
+---
+
+## Building the `customers` table
+
+This one model taught me more SQL than anything else in the project. It's built as a chain of CTEs (`WITH x AS (...), y AS (...) SELECT ... FROM final`) — each step doing one clear job:
+
+1. **Pull in the raw tables** — customers, orders, payments — no logic yet.
+2. **Total up payments per order** — multiple payments can belong to one order, so sum them first.
+3. **Summarize orders per customer** — first order date, last order date, order count, using `MIN()`, `MAX()`, `COUNT()`.
+4. **Trace spend back to the customer** — payments only know which *order* they belong to, not which *customer*, so you have to join customer → order → payment to connect the dots.
+5. **Bring it all together** — combine customer info, order stats, and lifetime spend with `LEFT JOIN`s so customers with zero orders don't get dropped, and wrap totals in `COALESCE(x, 0)` so they show `0` instead of `NULL`.
+
+Three SQL habits this reinforced:
+
+- Every column in a `SELECT` that isn't aggregated has to appear in the `GROUP BY` — no exceptions.
+- `LEFT JOIN` keeps everything from the left-hand table even without a match; a plain `JOIN` would silently drop it. That distinction matters a lot when "no orders yet" is a valid, meaningful state — not something to discard.
+- CTEs need commas *between* them, but never before the final `SELECT`.
+
+---
+
+## The commands, in the order I actually used them
+
+```bash
+gcloud auth login
+gcloud projects create learn-dbt-zayed-2026
+gcloud services enable bigquery.googleapis.com
+gcloud auth application-default login
+
+pip install dbt-core dbt-bigquery
+
+dbt debug                        # check the connection actually works
+dbt seed                         # load the CSVs into BigQuery
+dbt run                          # build every model
+dbt run --select customers       # build just one model
+dbt run --select stg_orders+     # build a model and everything downstream of it
+dbt test --select customers      # run the data quality checks
+dbt docs generate && dbt docs serve   # view the lineage graph
+```
+
+---
+
+## The bugs that actually taught me something
+
+Nothing teaches you a tool faster than it breaking. A few of these cost me way more time than they should have:
+
+- **A trailing space in a folder name** (`models ` instead of `models`) silently broke dbt's path matching. No error message pointed at it directly — it just quietly didn't find my models.
+- **Triple curly braces** (`{{{ ... }}}`) instead of double — a one-character typo that's a full Jinja syntax error.
+- **Mixing aggregated and non-aggregated columns** without listing them all in `GROUP BY` — BigQuery rejects it outright.
+- **Naming a CTE `order`** — collided with the reserved SQL keyword used in `ORDER BY`.
+- **Editing a `.sql` file and expecting it to just work** — a model's definition in BigQuery only updates when you run `dbt run` again. Saving the file changes nothing on its own.
+- **Small naming drift** — `customer_orders` vs. `customers_orders`, `total_amunt` vs. `total_amount`. SQL has no autocomplete safety net; one missing letter and the whole model fails to compile.
+
+None of these are dbt-specific lessons, really — they're "read the error message carefully and check your spelling" lessons. But they only stick once they've cost you twenty minutes.
+
+---
+
+## What I want to try next
+
+- **`relationships` tests** — checking that every `orders.customer_id` actually exists in the `customers` table, since BigQuery won't enforce that on its own.
+- **`accepted_values` tests** — e.g. making sure `orders.status` is always one of `returned`, `completed`, or `shipped`.
+- **Incremental models** — for tables too large to safely rebuild from scratch every run.
+- **dbt packages** like `dbt_utils` — reusable macros instead of hand-rolling the same SQL patterns.
+- **Snapshots** — tracking how a row's values change over time.
+
+---
+
+## Why I bothered writing this down
+
+None of this is groundbreaking — dbt has a huge community and better tutorials than this post. But building it end-to-end, bugs included, made concepts click that reading docs alone never did. If you're starting out in data or analytics engineering and dbt keeps coming up in meetings you don't fully follow yet, my honest advice is: spin up a sandbox project and break it a few times. That's genuinely where the learning happens.

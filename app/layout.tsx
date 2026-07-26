@@ -17,10 +17,10 @@ export const metadata: Metadata = {
     canonical: '/'
   },
   title: {
-    default: 'Zaid Aqil - Software Engineer',
+    default: 'Zaid Aqil - AI and Data Engineer - Intern at Deloitte SEA Consulting',
     template: '%s | Zaid Aqil'
   },
-  description: 'Software engineer passionate about building data-driven applications. Crafting robust systems that turn complex data into meaningful solutions.',
+  description: 'AI and Data Engineer Intern at Deloitte SEA Consulting, passionate about building data-driven applications. Crafting robust systems that turn complex data into meaningful solutions.',
 };
 
 const geist = Geist({

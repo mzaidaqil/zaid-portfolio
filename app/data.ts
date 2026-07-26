@@ -93,11 +93,18 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    title: 'What I Learned Teaching Myself dbt (as a Data Engineering Intern)',
+    description:
+      'Notes from building my first real dbt + BigQuery project during my internship at Deloitte SEA Consulting — the concepts, the project structure, and every bug that taught me something.',
+    link: '/blog/learning-dbt-bigquery-as-an-intern',
+    uid: 'blog-2',
+  },
+  {
     title: 'WIP',
     description: 'WIP',
     link: '/blog/exploring-the-intersection-of-design-ai-and-design-engineering',
     uid: 'blog-1',
-  }
+  },
 ]
 
 export const SOCIAL_LINKS: SocialLink[] = [
