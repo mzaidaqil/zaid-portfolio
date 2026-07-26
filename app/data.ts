@@ -99,12 +99,6 @@ export const BLOG_POSTS: BlogPost[] = [
     link: '/blog/learning-dbt-bigquery-as-an-intern',
     uid: 'blog-2',
   },
-  {
-    title: 'WIP',
-    description: 'WIP',
-    link: '/blog/exploring-the-intersection-of-design-ai-and-design-engineering',
-    uid: 'blog-1',
-  },
 ]
 
 export const SOCIAL_LINKS: SocialLink[] = [
