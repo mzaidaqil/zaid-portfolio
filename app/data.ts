@@ -61,6 +61,17 @@ export const PROJECTS: Project[] = [
 
 export const WORK_EXPERIENCE: WorkExperience[] = [
   {
+    company: 'Deloitte Consulting SEA',
+    title: 'AI & Data Intern',
+    start: '2026',
+    end: '',
+    id: 'work4',
+    description: `•	Built data transformation pipelines with dbt on Google BigQuery, using staging and mart layers, automated data quality tests, and generated lineage documentation.
+
+•	Applied SQL and data modelling practices to turn raw source data into clean, analysis-ready tables.
+`
+  },
+  {
     company: 'Trez Sport',
     title: 'Web Developer & Social Media Admin',
     start: '2024',

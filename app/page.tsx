@@ -203,7 +203,7 @@ export default function Personal() {
                     </p>
                   </div>
                   <p className="text-zinc-600 dark:text-zinc-400 whitespace-nowrap text-sm">
-                    {job.start} - {job.end}
+                    {job.end ? `${job.start} - ${job.end}` : job.start}
                   </p>
                 </div>
               </div>

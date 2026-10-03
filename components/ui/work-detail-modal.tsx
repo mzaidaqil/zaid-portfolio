@@ -105,7 +105,7 @@ export function WorkDetailModal({
                 </h3>
                 <p className="text-zinc-600 dark:text-zinc-400">{company}</p>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {start} - {end}
+                  {end ? `${start} - ${end}` : start}
                 </p>
               </div>
               
