@@ -142,7 +142,7 @@ export default function Personal() {
       >
         <div className="flex-1">
           <p className="text-zinc-600 dark:text-zinc-400">
-          Engineering software that unlocks the power of data. Focused on performance, reliability, and impact. Also fascinated by financial markets.
+          Building reliable software and AI-powered systems, from secure backend APIs to the data pipelines behind them. I care about clean architecture, solid testing, and understanding why code works, not just that it runs. Also fascinated by financial markets.
           </p>
         </div>
       </motion.section>
