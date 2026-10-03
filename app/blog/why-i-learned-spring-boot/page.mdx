@@ -1,0 +1,166 @@
+export const metadata = {
+  title: 'Why a Data Engineering Intern Decided to Learn Spring Boot',
+  description:
+    'AI tools showed me where my software engineering skills were thin. Here is why I picked Java and Spring Boot to fix that, and what I learned rebuilding UniRoll as a full-stack app.',
+  alternates: {
+    canonical: '/blog/why-i-learned-spring-boot',
+  },
+};
+
+# Why a Data Engineering Intern Decided to Learn Spring Boot
+
+My internship at **Deloitte SEA Consulting** was mostly about data: dbt models, BigQuery, SQL, and pipelines. So a backend Java framework might seem like an odd thing to learn next. This post explains why I did it, and what I learned by building a real project with it.
+
+---
+
+## What AI tools showed me
+
+I use AI coding tools every day, like most people now. They're great at producing code quickly. But using them a lot made something uncomfortable obvious: **AI could write code faster than I could judge it.**
+
+When it generated a backend endpoint, I could tell the code ran. I couldn't always tell whether it was *right*:
+
+- Was the authentication actually secure, or did it just look secure?
+- What happens when two requests reach the same row at the same time?
+- Where should the business logic live, and why?
+- How would I even test this properly?
+
+I was answering those questions with "the AI said so." That's fine for a prototype. It's not fine if you want to be an engineer someone trusts with a production system. AI takes away the typing; it doesn't take away the need to understand. If anything, it makes understanding *more* important, because you're now the reviewer of everything it writes.
+
+So I decided to strengthen my software development fundamentals properly, and not just my data skills.
+
+---
+
+## Why Java and Spring Boot specifically
+
+I could have picked any backend stack. I already knew some Node.js and Python, so those would have been the comfortable choice. I chose Java and Spring Boot on purpose:
+
+- **It's what industry actually runs on.** A huge amount of enterprise software (banking, insurance, telcos, government systems, and many of the client systems consulting firms work with) is built on Java and Spring. If I want to follow industry technology, this is near the center of it.
+- **It forces good structure.** Spring is opinionated about layers: controllers, services, and repositories. That's exactly the discipline I was missing when I let AI decide where code should go.
+- **Security, transactions and testing come built in.** Spring Security, `@Transactional` and Spring's test tooling are industry standards. Learning them teaches the *concepts*, not just one library.
+- **It opens doors after Deloitte.** Looking past my industrial training, I don't want to be boxed into one narrow role. Data engineering and backend engineering overlap a lot (APIs, databases, reliability), and being comfortable in both makes me a much stronger candidate.
+
+---
+
+## The project: rebuilding UniRoll
+
+Tutorials only take you so far, so I needed a real project. **UniRoll** started as a university group assignment: an Android app for course enrollment, with a local SQLite database. I rebuilt it solo as a production-style web application:
+
+- **Frontend:** React, TypeScript, TanStack Query, Tailwind CSS
+- **Backend:** Java 21, Spring Boot, Spring Security (JWT), Spring Data JPA
+- **Database:** PostgreSQL, with Flyway migrations
+- **Testing:** JUnit 5, Mockito, Testcontainers
+- **Shipping:** Docker, GitHub Actions CI, deployed on Render and Neon
+
+Lecturers create and manage subjects; students browse, enroll and drop. The interesting part is the rules every enrollment has to respect:
+
+- a subject can't go over its seat capacity
+- a student can't go over **20 credit hours**
+- a student can't enroll in the same subject twice
+- only the lecturer who owns a subject can edit it or see its class list
+
+The rules are simple to write down. Enforcing them reliably was where I learned the most.
+
+---
+
+## Spring concepts, mapped to what I already knew
+
+Coming from data engineering and a bit of Next.js, this is how the core ideas mapped for me:
+
+| Spring concept | What it actually is | Closest thing I knew |
+|---|---|---|
+| **`@RestController`** | A class whose methods handle HTTP requests | A Next.js API route |
+| **`@Service`** | Where the business rules live | The transformation logic in a dbt model |
+| **Repository (`JpaRepository`)** | An interface; Spring writes the SQL from the method name | A hand-written query, minus the hand-writing |
+| **Entity** | A Java class mapped to a database table | A table definition |
+| **Dependency injection** | Spring creates your objects and passes in what they need | Importing a module, but managed for you |
+| **`@Transactional`** | Everything in the method commits together, or nothing does | `BEGIN` ... `COMMIT` in SQL |
+| **Flyway migration** | Versioned SQL files that build the schema | dbt models, but for the schema itself |
+
+The method-name queries surprised me most. Writing this in an interface:
+
+```java
+boolean existsByStudentIdAndSubjectId(Long studentId, Long subjectId);
+long countBySubjectId(Long subjectId);
+```
+
+is enough. Spring Data reads the method names and generates the queries. For anything more complex, you write the query yourself:
+
+```java
+@Query("""
+        SELECT COALESCE(SUM(e.subject.creditHours), 0)
+        FROM Enrollment e
+        WHERE e.student.id = :studentId
+        """)
+long sumCreditHoursByStudentId(@Param("studentId") Long studentId);
+```
+
+That `COALESCE(..., 0)` is the same habit from my dbt work: a student with no enrollments should have `0` credit hours, not `NULL`.
+
+---
+
+## The lesson I wouldn't have learned from AI: concurrency
+
+This is the part that justified the whole project for me.
+
+The first version of the enrollment logic looked correct. It checked that the subject wasn't full, checked the credit hours, then saved the enrollment. It passed every normal test.
+
+But imagine a subject with **one seat left** and two students clicking "Enroll" at the same moment. Both requests read "1 seat left," both pass the check, and both save. Now the subject is over capacity. Nothing crashed and no error was logged. The data is just wrong.
+
+The fix is to **lock the rows** before checking them, so the second request waits until the first one finishes:
+
+```java
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("SELECT s FROM Subject s WHERE s.id = :id")
+Optional<Subject> findByIdForUpdate(@Param("id") Long id);
+```
+
+This becomes `SELECT ... FOR UPDATE` in PostgreSQL. The enrollment service locks the student first, then the subject, **always in that order**, so two requests can't each hold one lock while waiting for the other (a deadlock):
+
+```java
+@Transactional
+public EnrollmentResponse enroll(Long subjectId, Long studentId) {
+    User student = userRepository.findByIdForUpdate(studentId).orElseThrow(...);
+    Subject subject = subjectRepository.findByIdForUpdate(subjectId).orElseThrow(...);
+
+    if (enrollmentRepository.countBySubjectId(subjectId) >= subject.getCapacity()) {
+        throw new ConflictException(subject.getCode() + " is full");
+    }
+    long currentHours = enrollmentRepository.sumCreditHoursByStudentId(studentId);
+    if (currentHours + subject.getCreditHours() > MAX_CREDIT_HOURS) {
+        throw new ConflictException("... the limit is " + MAX_CREDIT_HOURS);
+    }
+    return EnrollmentResponse.from(enrollmentRepository.save(new Enrollment(student, subject)));
+}
+```
+
+To prove it works, one integration test fires **8 enrollments at the same time** at a subject with 1 seat and checks that exactly one succeeds. With the locks removed, all 8 get in.
+
+That bug would never have shown up while clicking through the app by myself. It's exactly the kind of thing I couldn't have caught in AI-generated code before this project.
+
+---
+
+## Other things that clicked
+
+- **Enforce rules twice.** The service layer checks every rule and returns a clear error message. The database *also* enforces them with `UNIQUE`, `CHECK` and foreign-key constraints, so bad data can't get in even if the Java code has a bug.
+- **Never return entities from the API.** Each endpoint returns its own small response record. That way, a database change can't accidentally leak a field like a password hash.
+- **Don't reveal which emails exist.** A wrong password and an unknown email return the same `401`, and both run a BCrypt check so their response times match too.
+- **Test at different levels.** Unit tests with Mockito for the rules, `@WebMvcTest` for security and validation, and Testcontainers to run repository and integration tests against a real PostgreSQL database instead of a fake one. That came to 93 backend tests in total.
+- **Let the schema have one owner.** Flyway creates and changes the tables; Hibernate only checks that the entities still match them. No surprise schema changes on startup.
+
+---
+
+## What I want to learn next
+
+- **Spring's caching and messaging**, e.g. Redis and Kafka, which come up a lot in enterprise systems
+- **Observability**: proper logging, metrics and tracing with Actuator and OpenTelemetry
+- **Connecting this back to data**: building APIs that serve the tables my dbt pipelines produce
+
+---
+
+## The takeaway
+
+AI hasn't made fundamentals less important. It has made them the thing that sets you apart. Anyone can generate a Spring Boot controller now. Fewer people can explain why it needs a lock, a transaction, or a test that fires 8 requests at once.
+
+Learning Spring Boot was my way of getting from "the code runs" to "I know why it's correct." If you're in data or any other field and AI is writing more of your code than you can confidently review, my advice is the same as last time: pick a real project, build it end to end, and let it break. That's where the learning happens.
+
+The code is on [GitHub](https://github.com/mzaidaqil/uniroll-web), and there's a [live demo](https://uniroll-frontend.onrender.com) if you want to try enrolling yourself.

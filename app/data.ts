@@ -50,6 +50,13 @@ export const PROJECTS: Project[] = [
     image: '/projects/projects3.webp',
     id: 'project3',
   },
+  {
+    name: 'UniRoll: University Course Enrollment System',
+    description: 'A secure, full-stack enrollment platform with role-based access for lecturers and students, enforcing real enrollment rules such as seat capacity and a 20 credit-hour cap.',
+    link: 'https://github.com/mzaidaqil/uniroll-web',
+    image: '/projects/project4.webp',
+    id: 'project4',
+  },
 ]
 
 export const WORK_EXPERIENCE: WorkExperience[] = [
@@ -92,6 +99,13 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
 ]
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    title: 'Why a Data Engineering Intern Decided to Learn Spring Boot',
+    description:
+      'AI tools showed me where my software engineering skills were thin. Here is why I picked Java and Spring Boot to fix that, and what I learned rebuilding UniRoll as a full-stack app.',
+    link: '/blog/why-i-learned-spring-boot',
+    uid: 'blog-3',
+  },
   {
     title: 'What I Learned Teaching Myself dbt (as a Data Engineering Intern)',
     description:

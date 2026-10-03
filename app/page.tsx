@@ -218,7 +218,7 @@ export default function Personal() {
       >
         <h3 className="mb-5 text-lg font-medium">Tech Stack</h3>
         <InfiniteSlider speedOnHover={20} gap={32}>
-          {['react', 'nextjs2', 'typescript', 'python', 'nodejs', 'tailwindcss', 'postgresql', 'git', 'html5', 'css3', 'js', 'mysql'].map((tech) => (
+          {['react', 'nextjs2', 'typescript', 'python', 'java', 'spring', 'nodejs', 'tailwindcss', 'postgresql', 'git', 'html5', 'css3', 'js', 'mysql'].map((tech) => (
             <div key={tech} className="flex items-center justify-center w-[48px] h-[48px]">
               <TechStackIcon name={tech} className="w-10 h-10" />
             </div>
