@@ -66,9 +66,13 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
     start: '2026',
     end: '',
     id: 'work4',
-    description: `•	Built data transformation pipelines with dbt on Google BigQuery, using staging and mart layers, automated data quality tests, and generated lineage documentation.
+    description: `•	Developed and designed an Agentic Code Converter (ACC) application, an internal multi-agent platform that automates migration of legacy Oracle SQL/PL-SQL ETL into modern BigQuery data build tool (dbt) models, cutting the manual rewriting effort required on client data-modernization engagements.
 
-•	Applied SQL and data modelling practices to turn raw source data into clean, analysis-ready tables.
+•	Applied and designed within a Google Agent Development Kit (ADK) and Vertex AI (Gemini) architecture, with a FastAPI back-end and React/TypeScript front-end, where specialized agents analyse, translate, validate and auto-refine code, iterating until the generated dbt models pass compilation to keep defects low.
+
+•	Containerized the preanalyze, analyze and convert agent microservices into Docker images and deployed on Google Cloud Run, letting each stage of the pipeline scale independently for concurrent job runs.
+
+•	Collaborated with the team using Git on Azure DevOps repos, working in separate branches and merging into a shared development branch.
 `
   },
   {
